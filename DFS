@@ -1,0 +1,188 @@
+//Name: Joshua Rony
+//UserID: jrony
+//Assignment Name: pa5
+
+#include<stdio.h>
+#include<stdlib.h>
+#include<string.h>
+#include<inttypes.h>
+
+#include "Graph.h"
+
+
+#define MAX 100
+
+
+
+
+int main(int argc, char *argv[]){
+	
+	
+	
+	if(argc != 3){
+		
+		printf("%s", "Number of arguments must not be less than or greater than 2.\n");
+		exit(1);
+	}
+	
+	
+	int v1 = 0;
+	
+	int v2 = 0;
+	
+	char input[MAX];
+	
+	int lineCount0 = 0;
+	
+	int lineCount1 = 0;
+	
+	//int flag = 0;
+	
+	int order = 0;
+	
+	FILE *pToFile0 = fopen(argv[1], "r");
+	
+	while(fgets(input, MAX, pToFile0)){
+		
+		lineCount0++;
+		
+	}
+	
+	//printf("%s%d%s", "The number of lines in the file is: ", lineCount0, "\n");
+	
+	fclose(pToFile0);
+	
+	
+	FILE *pToFile1 = fopen(argv[1], "r");
+	
+	FILE *pToFile2 = fopen(argv[2], "w");
+	
+	fgets(input, MAX, pToFile1);
+	
+	sscanf(input, "%d", &order);
+	
+	Graph myGraph = newGraph(order);
+	
+	
+	while(fgets(input, MAX, pToFile1)){
+		
+		//lineCount0 = total number of lines in file
+		
+		//lineCount1  is the variable you're incrementing in the while loop.
+		
+		sscanf(input, "%d %d", &v1, &v2);
+		
+		if(v1 != 0 && v2 != 0){
+			
+			addArc(myGraph, v1, v2);
+			
+		}
+		
+		lineCount1 = lineCount1 + 1;
+		
+	} //The graph is now loaded with values.
+	
+	List S = newList();
+	
+	for(int x = 1; x < getOrder(myGraph) + 1; x++){
+		
+		append(S, x);
+	}
+	
+	
+	fprintf(pToFile2, "%s\r\n", "Adjacency list representation of G:");
+	
+	printGraph(pToFile2, myGraph); //adjacency list of graph has been printed into output file.
+	
+	
+	DFS(myGraph, S); //running DFS with list of vertices in descending order.
+	
+	Graph myTranspose = transpose(myGraph); //setting myTranspose equal to the transpose of G.
+	
+	moveBack(S);
+	
+	for(int x = 0; x < getOrder(myGraph); x++){ //deleting latter "order" number of elements from list to satisfy DFS precondition.
+		
+		deleteBack(S);
+	}
+	
+	DFS(myTranspose, S); //running DFS on the transpose of G with S which is now the list of descending finish times.
+		
+    for(int x = 0; x < getOrder(myGraph); x++){ //deleting the latter "order" number of elements of S once again to obtain
+                                                //a list containing just the strongly connected components.	
+    	deleteBack(S);
+	}
+	
+	int strongComp = 0;
+	
+	for(int x = 1; x < getOrder(myGraph) + 1; x++){ // Obtaining the number of strongly connected components from the parent list.
+		
+		if(getParent(myTranspose, x) == -1){
+			
+			strongComp = strongComp + 1;
+		}
+	}
+	
+	fprintf(pToFile2, "%s%d%s\r\n", "G contains ", strongComp, " strongly connected components:");
+	
+	moveBack(S);
+	
+	int placeHolder;
+	
+	int compCount = 1;
+	
+	for(int x = getOrder(myGraph); x > 0; x--){
+		
+		if(getParent(myTranspose, get(S)) == -1){
+			
+			fprintf(pToFile2, "%s%d%s", "Component ", compCount, ": ");
+			
+			placeHolder = index(S);
+			
+			fprintf(pToFile2, "%d%s", get(S), " ");
+			
+			moveNext(S);
+			
+			while(index(S) != -1 && getParent(myTranspose, get(S)) != -1){
+			
+				
+				fprintf(pToFile2, "%d%s", get(S), " ");
+				
+				moveNext(S);
+				
+			}
+			
+			fprintf(pToFile2, "%s", "\r\n");
+			
+			compCount++;
+			
+			moveFront(S);
+			
+			for(int y = 0; y < placeHolder; y++){
+				
+				moveNext(S);
+			}
+		}
+		
+		if(get(S) != front(S)){
+		
+			movePrev(S);
+		}
+		
+	}
+	
+    
+	
+	fclose(pToFile1);
+	
+	fclose(pToFile2);
+	
+	freeGraph(&myGraph);
+	
+	freeGraph(&myTranspose);
+	
+	freeList(&S);
+	
+	
+	
+}
